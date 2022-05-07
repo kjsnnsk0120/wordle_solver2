@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>wordleを解いてくれるくん</title>
+    <link rel="stylesheet" href="https://pyscript.net/alpha/pyscript.css" />
+    <script defer src="https://pyscript.net/alpha/pyscript.js"></script>
+    <py-script>
+from pyodide.http import open_url
+import json
+api_endpoint = 'https://sfzdeisncmxwnvnzc2hje3k5ya0wfjma.lambda-url.ap-northeast-1.on.aws/'
+pyscript.write("suggestedword","おすすめ単語は soare です。")
+
+tmp_int = [-1]
+def client():
+    input_word = input_word_a.value
+    input_response = input_response_a.value
+
+    if len(input_word) != 5:
+        pyscript.write("leftwords","入力がおかしいようです。確認してください。")
+        return
+    if len(input_response) != 5 and input_response.count("o") + input_response.count("-") + input_response.count("x") != 5:
+        pyscript.write("leftwords","入力がおかしいようです。確認してください。")
+        return
+    input_word_a.clear()
+    input_response_a.clear()
+    res = call_lambda(tmp_int[0],input_word,input_response)
+    if int(res["number_of_candidates"]) == 0:
+        pyscript.write("leftwords","候補単語数が0になりました。やり直してください。")
+        pyscript.write("suggestedword","")
+    elif int(res["number_of_candidates"]) == 1:
+        pyscript.write("leftwords","正解は " + str(res["candidates"])+" です。")
+        pyscript.write("suggestedword","")
+    else:
+        pyscript.write("suggestedword","おすすめ単語は " + str(res["suggested_word"])+" です。")
+        if int(res["number_of_candidates"]) <= 10:
+            pyscript.write("candidates","残っている単語は " + str(res["candidates"])+" です。")
+        pyscript.write("leftwords","残っている単語の数は "+str(res["number_of_candidates"])+" 個です。")
+
+    tmp_int[0] = res["available_int"]
+
+def gen_params(params):
+    ans = ""
+    for key in params:
+        ans += str(key)
+        ans += "="
+        ans += str(params[key])
+        ans += "&"
+    return ans[:-1]
+
+def call_lambda(word_list_int,input_word,input_response):
+    params = {"word_list_int":str(word_list_int),
+            "input_word": input_word,
+            "input_response": input_response}
+    
+    url_with_params = f'{api_endpoint}?{gen_params(params)}'
+    #url_with_params = 'https://sfzdeisncmxwnvnzc2hje3k5ya0wfjma.lambda-url.ap-northeast-1.on.aws/'
+    try:
+        result = json.loads(open_url(url_with_params).read())
+    except Exception as e:
+        pyscript.write("suggestedword","エラーが発生しました。リロードしてやり直してください。")
+        tmp_int[0] = -1
+        return
+    return result
+    </py-script>
+    </head>
+    <body>
+        <h1><font color = "red"><big><marquee direction="right" behavior="alternate">wordleを解いてくれるくん</marquee></big></font></h1>
+        <p><label id='leftwords'></label></p>
+        <p><label id='candidates'></label></p>
+        <p><label id='suggestedword'>読み込み中……</label></p>
+        <br>
+        <p>左のボックスには入力した単語を、右のボックスにはwordleの返答を入力してください。<br></p>
+        <py-box widths="2/5;2/5;1/5">
+            <py-inputbox id="input_word_a">
+            </py-inputbox>
+            <py-inputbox id="input_response_a">
+            </py-inputbox>
+            <py-button id="new-task-btn" label="おすすめ単語を表示">
+def on_click(evt):
+    client()
+            </button>
+        </py-box>
+        <br><br>
+
+        <p>【入力方法】<br>緑色はo(小文字のオー)、黄色は-(半角のバー)、灰色はx(小文字のエックス)で記載してください。<br>
+        例： <font color = "gray">■■</font><font color = "yellow">■</font><font color = "green">■■</font>  →  xx-oo
+        </p>
+    </body>
+</html>
