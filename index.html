@@ -19,7 +19,7 @@ def client():
     if len(input_word) != 5:
         pyscript.write("leftwords","入力がおかしいようです。確認してください。")
         return
-    if len(input_response) != 5 and input_response.count("o") + input_response.count("-") + input_response.count("x") != 5:
+    if len(input_response) != 5 or input_response.count("o") + input_response.count("-") + input_response.count("x") != 5:
         pyscript.write("leftwords","入力がおかしいようです。確認してください。")
         return
     input_word_a.clear()
@@ -54,7 +54,6 @@ def call_lambda(word_list_int,input_word,input_response):
             "input_response": input_response}
     
     url_with_params = f'{api_endpoint}?{gen_params(params)}'
-    #url_with_params = 'https://sfzdeisncmxwnvnzc2hje3k5ya0wfjma.lambda-url.ap-northeast-1.on.aws/'
     try:
         result = json.loads(open_url(url_with_params).read())
     except Exception as e:
