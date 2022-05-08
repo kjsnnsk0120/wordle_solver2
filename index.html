@@ -12,9 +12,11 @@ api_endpoint = 'https://sfzdeisncmxwnvnzc2hje3k5ya0wfjma.lambda-url.ap-northeast
 pyscript.write("suggestedword","おすすめ単語は soare です。")
 
 tmp_int = [-1]
-def client():
-    input_word = input_word_a.value
-    input_response = input_response_a.value
+def client(*ags, **kws):
+    input_word_a = Element("input_word_a")
+    input_response_a = Element("input_response_a")
+    input_word = input_word_a.element.value
+    input_response = input_response_a.element.value
 
     if len(input_word) != 5:
         pyscript.write("leftwords","入力がおかしいようです。確認してください。")
@@ -28,9 +30,11 @@ def client():
     if int(res["number_of_candidates"]) == 0:
         pyscript.write("leftwords","候補単語数が0になりました。やり直してください。")
         pyscript.write("suggestedword","")
+        yscript.write("candidates","")
     elif int(res["number_of_candidates"]) == 1:
         pyscript.write("leftwords","正解は " + str(res["candidates"])+" です。")
         pyscript.write("suggestedword","")
+        pyscript.write("candidates","")
     else:
         pyscript.write("suggestedword","おすすめ単語は " + str(res["suggested_word"])+" です。")
         if int(res["number_of_candidates"]) <= 10:
@@ -57,7 +61,8 @@ def call_lambda(word_list_int,input_word,input_response):
     try:
         result = json.loads(open_url(url_with_params).read())
     except Exception as e:
-        pyscript.write("suggestedword","エラーが発生しました。リロードしてやり直してください。")
+        #pyscript.write("suggestedword","エラーが発生しました。リロードしてやり直してください。")
+        pyscript.write("suggestedword",e)
         tmp_int[0] = -1
         return
     return result
@@ -69,17 +74,11 @@ def call_lambda(word_list_int,input_word,input_response):
         <p><label id='candidates'></label></p>
         <p><label id='suggestedword'>読み込み中……</label></p>
         <br>
-        <p>左のボックスには入力した単語を、右のボックスにはwordleの返答を入力してください。<br></p>
-        <py-box widths="2/5;2/5;1/5">
-            <py-inputbox id="input_word_a">
-            </py-inputbox>
-            <py-inputbox id="input_response_a">
-            </py-inputbox>
-            <py-button id="new-task-btn" label="おすすめ単語を表示">
-def on_click(evt):
-    client()
-            </button>
-        </py-box>
+        <label><strong>入力した単語 👉 </strong><input id="input_word_a" class="border flex-1 mr-3 border-gray-300 p-2 rounded" type="text"></label>
+        <label><strong>wordleからの応答 👉</strong><input id="input_response_a" class="border flex-1 mr-3 border-gray-300 p-2 rounded" type="text"></label>
+        <button id="new-task-btn" class="p-2 text-white bg-blue-600 border border-blue-600 rounded" type="submit" pys-onClick="client">
+        おすすめ単語を表示 👀
+        </button>
         <br><br>
 
         <p>【入力方法】<br>緑色はo(小文字のオー)、黄色は-(半角のバー)、灰色はx(小文字のエックス)で記載してください。<br>
